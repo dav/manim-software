@@ -1,0 +1,7 @@
+/tmp/
+/media/
+/.venv/
+/dist/
+__pycache__/
+*.pyc
+.pytest_cache/
