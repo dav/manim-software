@@ -30,8 +30,11 @@ class Hello(Scene):
 
 ## Install
 
+Not published to PyPI yet, so install it from the repository:
+
 ```sh
-pip install manim-software        # or: uv pip install manim-software
+pip install git+https://github.com/dav/manim-software
+# or: uv pip install git+https://github.com/dav/manim-software
 ```
 
 It depends on `manim>=0.19` (the Community edition), which needs a few
@@ -52,9 +55,19 @@ is what brings the names into a scene file.
 ```sh
 git clone https://github.com/dav/manim-software && cd manim-software
 uv venv && uv pip install -e ".[dev]"
-manim -pql examples/request_flow.py RequestFlow            # a 68 s story, low-res preview
-manim -s -qm examples/request_flow.py SoftwareSmokeScene   # one still with everything in it
-manim -qh examples/request_flow.py RequestFlow             # 1080p
+uv run manim -pql examples/request_flow.py RequestFlow            # a 68 s story, low-res preview
+uv run manim -s -qm examples/request_flow.py SoftwareSmokeScene   # one still with everything in it
+uv run manim -qh examples/request_flow.py RequestFlow             # 1080p
+```
+
+`uv venv` creates the environment but does not add it to your `PATH`, so a
+bare `manim` is `command not found`. Either prefix with `uv run`, as above, or
+activate the environment once and drop the prefix:
+
+```sh
+source .venv/bin/activate        # bash, zsh
+source .venv/bin/activate.fish   # fish
+.venv\Scripts\activate           # Windows
 ```
 
 The repo's `manim.cfg` sends media to `tmp/media`, which is git-ignored.
@@ -117,8 +130,8 @@ The repo's `manim.cfg` sends media to `tmp/media`, which is git-ignored.
 
 ```sh
 uv venv && uv pip install -e ".[dev]"
-pytest                                  # geometry, layout and export tests, no rendering
-manim -s -qm examples/request_flow.py SoftwareSmokeScene
+uv run pytest                           # geometry, layout and export tests, no rendering
+uv run manim -s -qm examples/request_flow.py SoftwareSmokeScene
 ```
 
 The package started life as a subpackage of a ManimGL fork
