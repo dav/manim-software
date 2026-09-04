@@ -157,3 +157,24 @@ def test_reroute_follows_moved_endpoint():
     b.shift(2 * UP)
     conn.reroute()
     assert np.allclose(conn.get_end(), b.get_port(LEFT))
+
+
+def test_connector_accepts_a_plain_mobject_as_an_endpoint():
+    """
+    manim's Mobject.__getattr__ fabricates an attribute for any name, so
+    hasattr(mob, "get_port") is True for every mobject. Probing the instance
+    sent every endpoint down the Component branch and raised
+    "getter() takes 1 positional argument but 3 were given" for anything else.
+    """
+    from manim import RoundedRectangle
+
+    from manim_software import Component, Connector
+
+    component = Component("A")
+    plain = RoundedRectangle(width=2.0, height=1.0).shift(4 * RIGHT)
+
+    connector = Connector(component, plain)
+    assert len(connector.route.points) > 0
+
+    # The plain end must land on its bounding box, not at its centre.
+    assert connector.route.get_end()[0] < plain.get_center()[0]
