@@ -34,8 +34,16 @@ class Hello(Scene):
 pip install manim-software        # or: uv pip install manim-software
 ```
 
-It depends on `manim>=0.19` (the Community edition) and follows its
-[installation requirements](https://docs.manim.community/en/stable/installation.html).
+It depends on `manim>=0.19` (the Community edition), which needs a few
+system libraries before `pip install` can build its Cairo and Pango bindings:
+
+```sh
+brew install cairo pango pkg-config ffmpeg            # macOS
+sudo apt install libcairo2-dev libpango1.0-dev ffmpeg # Debian / Ubuntu
+```
+
+See manim's [installation page](https://docs.manim.community/en/stable/installation.html)
+for Windows and the details.
 Listing it under `plugins` in `manim.cfg` is optional; `from manim_software import *`
 is what brings the names into a scene file.
 
