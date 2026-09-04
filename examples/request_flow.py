@@ -233,7 +233,7 @@ class SoftwareSmokeScene(Scene):
         seq.to_corner(UR, buff=0.3)
         self.add(seq)
 
-        icons = VGroup(*(Icon(name) for name in ("queue", "cloud", "lock", "nope")))
+        icons = VGroup(*(Icon(name) for name in ("queue", "cloud", "lock", "phone", "mail", "file", "nope")))
         icons.arrange(RIGHT, buff=MED_LARGE_BUFF).to_corner(DL, buff=MED_SMALL_BUFF)
         self.add(icons)
 
@@ -251,7 +251,7 @@ class SoftwareSmokeScene(Scene):
         packet = Packet("GET /orders").move_to(system.connectors[("browser", "gateway")].get_point(0.5))
         pill = Packet("200 OK", shape="pill", color=TEAL).move_to(variants[2].get_point(0.5))
         self.add(packet, pill)
-        self.add(Caption("Smoke test", position=DR, buff=MED_SMALL_BUFF, font_size=20))
+        self.add(Caption("Smoke test", position=RIGHT, buff=MED_SMALL_BUFF, font_size=20))
 
 
 class PacketTest(Scene):

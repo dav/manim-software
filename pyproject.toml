@@ -12,11 +12,14 @@ requires-python = ">=3.11"
 authors = [{ name = "Dav Yaginuma" }]
 keywords = ["manim", "manim-plugin", "animation", "software", "architecture", "sequence-diagram"]
 classifiers = [
-    "Framework :: Matplotlib",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
-    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Graphics",
     "Topic :: Software Development :: Documentation",
 ]
@@ -27,12 +30,18 @@ dev = ["pytest>=8"]
 
 [project.urls]
 Homepage = "https://github.com/dav/manim-software"
+Source = "https://github.com/dav/manim-software"
+Issues = "https://github.com/dav/manim-software/issues"
 
 [project.entry-points."manim.plugins"]
 manim_software = "manim_software"
 
+[tool.hatch.build.targets.sdist]
+only-include = ["manim_software", "tests", "examples", "manim.cfg", "README.md", "LICENSE"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["manim_software"]
+exclude = ["manim_software/assets/README.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

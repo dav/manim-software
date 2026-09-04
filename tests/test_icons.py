@@ -3,9 +3,12 @@ The icon registry and the ``Icon`` lookup order: registered pictograms first,
 then an SVG in the package assets directory, then manim's assets_dir, and a
 placeholder rather than an exception.
 """
+from manim import RED
+from manim import WHITE
 from manim import Circle
 from manim import SVGMobject
 
+from manim_software import DiagramStyle
 from manim_software import ICON_REGISTRY
 from manim_software import Icon
 from manim_software import Pictogram
@@ -62,3 +65,19 @@ def test_svg_lookup_prefers_package_assets_over_assets_dir(tmp_path, monkeypatch
     icon = Icon("widget", height=1.0)
     assert isinstance(icon, SVGMobject)
     assert icon.width < 0.75 * icon.height
+    # A user's SVG keeps its own colours rather than the style's icon colour
+    assert all(m.get_stroke_color() == WHITE for m in icon.family_members_with_points())
+
+
+def test_bundled_svgs_ship_and_take_the_icon_colour():
+    assert icons.SOFTWARE_ASSETS_DIR.is_dir()
+    bundled = sorted(p.stem for p in icons.SOFTWARE_ASSETS_DIR.glob("*.svg"))
+    assert bundled == ["file", "mail", "phone"]
+    for name in bundled:
+        assert icons.find_svg(name) == icons.SOFTWARE_ASSETS_DIR / f"{name}.svg"
+        icon = Icon(name, height=0.6, style=DiagramStyle(icon_color=RED))
+        assert isinstance(icon, SVGMobject), name
+        assert icon.family_members_with_points(), name
+        assert abs(icon.height - 0.6) < 1e-3, name
+        assert all(m.get_stroke_color() == RED for m in icon.family_members_with_points()), name
+    assert Icon("phone", color=WHITE).get_stroke_color() == WHITE

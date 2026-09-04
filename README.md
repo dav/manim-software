@@ -1,9 +1,14 @@
 # manim-software
 
+[![CI](https://github.com/dav/manim-software/actions/workflows/ci.yml/badge.svg)](https://github.com/dav/manim-software/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/manim-software)](https://pypi.org/project/manim-software/)
+
 A [Manim Community](https://www.manim.community/) plugin for videos that
 explain how software works: the boxes of a system diagram, the wires between
 them, packets that travel those wires, sequence diagrams of the same
 conversation, and a few 3D props for the camera to swoop down on.
+
+![A request travelling through a browser, gateway, service, cache and database, then the same exchange as a sequence diagram, then the camera dropping onto the database](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/request_flow.gif)
 
 ```python
 from manim import *
@@ -30,11 +35,15 @@ class Hello(Scene):
 
 ## Install
 
-Not published to PyPI yet, so install it from the repository:
+```sh
+pip install manim-software        # or: uv pip install manim-software
+```
+
+For the latest unreleased changes, or until the first release reaches PyPI,
+install from the repository instead:
 
 ```sh
 pip install git+https://github.com/dav/manim-software
-# or: uv pip install git+https://github.com/dav/manim-software
 ```
 
 It depends on `manim>=0.19` (the Community edition), which needs a few
@@ -72,6 +81,16 @@ source .venv/bin/activate.fish   # fish
 
 The repo's `manim.cfg` sends media to `tmp/media`, which is git-ignored.
 
+`RequestFlow` is the GIF at the top. The other scenes in that file:
+
+| `RequestSequence` | `DatabaseZoom` |
+| --- | --- |
+| ![The sequence-diagram view on its own](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/request_sequence.gif) | ![A 3D database and server on a floor grid with the camera circling](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/database_zoom.gif) |
+
+| `PacketTest` | `SoftwareSmokeScene` |
+| --- | --- |
+| ![Packets travelling out and back along three wires](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/packet_test.gif) | ![One still touching every 2D mobject in the layer](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/smoke.png) |
+
 ## What is in the box
 
 - **`DiagramStyle`** — one dataclass of colours, stroke widths, fonts and sizes.
@@ -90,8 +109,11 @@ The repo's `manim.cfg` sends media to `tmp/media`, which is git-ignored.
 - **Icons** — `BrowserIcon`, `ServerIcon`, `DatabaseIcon`, `CacheIcon`,
   `QueueIcon`, `UserIcon`, `CloudIcon`, `LockIcon`, all drawn from primitives.
   `Icon(name)` looks a name up in `ICON_REGISTRY`, then as an SVG in the
-  package's `assets` directory, then in manim's configured `assets_dir`, and
-  falls back to a labelled placeholder. `register_icon` adds your own.
+  package's `assets` directory (`phone`, `mail` and `file` ship there, as
+  monochrome outlines that take the style's `icon_color`), then in manim's
+  configured `assets_dir` (your own SVGs, left in their own colours), and
+  falls back to a labelled placeholder. `register_icon` adds your own
+  pictogram class.
 - **`Connector`** — a wire between two mobjects' ports:
   `route="straight" | "arc" | "orthogonal" | "loop"`, tips at either end
   (`tip_shape` takes any manim `ArrowTip`), `dashed`, `offset` for parallel
@@ -133,6 +155,26 @@ uv venv && uv pip install -e ".[dev]"
 uv run pytest                           # geometry, layout and export tests, no rendering
 uv run manim -s -qm examples/request_flow.py SoftwareSmokeScene
 ```
+
+CI (`.github/workflows/ci.yml`) runs the tests on the oldest and newest
+supported Python, renders the smoke still, `PacketTest`, `DatabaseZoom` and
+`RequestFlow` to catch what the tests cannot, keeps those renders as workflow
+artifacts, and builds the sdist and wheel. The GIFs in this README come from
+`scripts/render_readme_media.sh`, which re-renders the examples and writes to
+`docs/media/`; run it after changing an example scene.
+
+### Releasing
+
+1. Bump `version` in `pyproject.toml` and merge that to `main`.
+2. Publish a GitHub release whose tag is `v` plus that version, `v0.1.0` for
+   example. The `Release` workflow checks the tag against `pyproject.toml`,
+   builds, uploads to PyPI and attaches the sdist and wheel to the release.
+
+Publishing uses PyPI's [trusted publishing](https://docs.pypi.org/trusted-publishers/),
+so there is no token to store. Once, before the first release, register the
+workflow on PyPI as a pending publisher: owner `dav`, repository
+`manim-software`, workflow `release.yml`, environment `pypi`; and create the
+`pypi` environment under the repository's Settings, Environments.
 
 The package started life as a subpackage of a ManimGL fork
 ([dav/manim](https://github.com/dav/manim/tree/software-explainers)) and was
