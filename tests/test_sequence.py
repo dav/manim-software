@@ -90,3 +90,27 @@ def test_message_from_record_and_bad_kind():
     assert arrow.label is not None
     with pytest.raises(ValueError):
         Message("a", "b", kind="carrier-pigeon")
+
+
+def _no_header_overlap(seq):
+    for left, right in zip(seq.headers, seq.headers[1:]):
+        assert left.get_right()[0] < right.get_left()[0], (left.label.original_text, right.label.original_text)
+
+
+def test_spacing_defaults_to_fit_the_widest_name():
+    seq = SequenceDiagram(["Browser", "Order Service Gateway", "Db"])
+    _no_header_overlap(seq)
+    widest = max(h.width for h in seq.headers)
+    assert np.isclose(seq.spacing, widest + 0.25)
+
+
+def test_forced_spacing_shrinks_names_to_fit():
+    seq = SequenceDiagram(["Browser", "Order Service Gateway", "Database"], spacing=1.3)
+    assert seq.spacing == 1.3
+    _no_header_overlap(seq)
+    assert all(h.width <= 1.3 - 0.25 + 1e-6 for h in seq.headers)
+    assert seq.keys[1] == "Order Service Gateway"
+    # Every name shrinks by the same factor, so the row still reads as one
+    loose = SequenceDiagram(["Browser", "Order Service Gateway", "Database"])
+    ratios = [tight.label.height / free.label.height for tight, free in zip(seq.headers, loose.headers)]
+    assert np.allclose(ratios, ratios[0])

@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 
     from manim.typing import ManimColor
     from manim.typing import Point3D
+    from manim.typing import Vector3D
 
     from manim_software.components import Component
     from manim_software.style import DiagramStyle
@@ -57,7 +58,8 @@ if TYPE_CHECKING:
 class Packet(VGroup):
     """
     A message in flight: a glowing dot, or a pill carrying a short label like
-    ``GET /orders``. A dot's label rides just above it.
+    ``GET /orders``. A dot's label rides beside it, above by default
+    (``label_direction``); pick the side away from whatever the wire passes.
     """
     def __init__(
         self,
@@ -67,6 +69,7 @@ class Packet(VGroup):
         radius: float | None = None,
         font_size: int | None = None,
         halo: bool = True,
+        label_direction: Vector3D = UP,
         style: DiagramStyle | None = None,
         **kwargs
     ):
@@ -90,7 +93,7 @@ class Packet(VGroup):
             self.body = Dot(radius=radius, color=self.packet_color)
             if self.label is not None:
                 _backstroke(self.label)
-                self.label.next_to(self.body, UP, buff=0.5 * SMALL_BUFF)
+                self.label.next_to(self.body, label_direction, buff=0.5 * SMALL_BUFF)
         self.halo = None
         if halo:
             halo_radius = 2.0 * radius if shape != "pill" else 0.5 * self.body.height + 0.6 * radius
