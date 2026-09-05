@@ -82,6 +82,9 @@ class DiagramStyle:
     # Text
     font: str = DEFAULT_DIAGRAM_FONT
     text_color: ManimColor = WHITE
+    # Secondary text: subtitles, attributions, anything that should read as
+    # quieter than the thing it sits under.
+    muted_color: ManimColor = GREY_B
     label_font_size: int = 28
     small_font_size: int = 20
     icon_color: ManimColor = GREY_A

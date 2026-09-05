@@ -76,11 +76,12 @@ class RequestFlow(SoftwareThreeDScene):
     drops down to look at the database in three dimensions.
     """
     def construct(self):
-        # 1. Title
-        title = Caption("A request through the system", position=ORIGIN, font_size=44)
-        self.play(FadeIn(title, shift=0.3 * UP))
-        self.wait(1.5)
-        self.play(FadeOut(title))
+        # 1. Title. Added, not faded in, so the file's first frame is the title
+        # rather than black -- see manim_software.titles.
+        open_on(self, TitleCard(
+            "A request through the system",
+            "browser to gateway to service, with a cache miss on the way",
+        ), hold=1.5)
 
         # 2. The system
         system = build_request_system()
@@ -190,6 +191,7 @@ class RequestFlow(SoftwareThreeDScene):
 class RequestSequence(Scene):
     """The sequence-diagram view on its own."""
     def construct(self):
+        open_on(self, TitleCard("The same request, as a sequence"), hold=1.2)
         seq = build_sequence(spacing=2.6, row_height=0.5, n_rows=len(MESSAGES))
         seq.scale_to_fit_width(config.frame_width - 1.5)
         seq.to_edge(UP, buff=0.6)
