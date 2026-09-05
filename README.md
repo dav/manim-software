@@ -5,8 +5,10 @@
 
 A [Manim Community](https://www.manim.community/) plugin for videos that
 explain how software works: the boxes of a system diagram, the wires between
-them, packets that travel those wires, sequence diagrams of the same
-conversation, and a few 3D props for the camera to swoop down on.
+them, packets that travel those wires, what goes wrong with them (drops,
+timeouts, retries, circuit breakers), many at once (fan-out, fan-in, queues
+under load), sequence diagrams of the same conversation, and a few 3D props
+for the camera to swoop down on.
 
 ![A request travelling through a browser, gateway, service, cache and database, then the same exchange as a sequence diagram, then the camera dropping onto the database](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/request_flow.gif)
 
@@ -91,6 +93,17 @@ The repo's `manim.cfg` sends media to `tmp/media`, which is git-ignored.
 | --- | --- |
 | ![Packets travelling out and back along three wires](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/packet_test.gif) | ![One still touching every 2D mobject in the layer](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/smoke.png) |
 
+`examples/failure_modes.py` has one scene for each thing that goes wrong, or
+happens all at once:
+
+| `RetryWithBackoff` | `TimeoutAndBreaker` |
+| --- | --- |
+| ![Two requests lost on the wire, each retry waiting longer, the third one through](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/retry_with_backoff.gif) | ![Two timeouts trip a circuit breaker, which fails fast, half-opens and resets](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/timeout_and_breaker.gif) |
+
+| `FanOutFanIn` | `QueueUnderLoad` |
+| --- | --- |
+| ![One request fanned out to three services and their answers merged](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/fan_out_fan_in.gif) | ![A queue filling up faster than its worker drains it, then rejecting](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/queue_under_load.gif) |
+
 ## What is in the box
 
 - **`DiagramStyle`** — one dataclass of colours, stroke widths, fonts and sizes.
@@ -123,10 +136,30 @@ The repo's `manim.cfg` sends media to `tmp/media`, which is git-ignored.
   with a trailing light and an arrival flash; `Reply` goes the other way;
   `SendAlong` chains hops and pulses each component on arrival; `reply_hops`
   reverses a list of connectors for the response.
+- **Failures** — `Drop(packet, connector, at=0.6)` is a `Send` that dies part
+  way, with a burst and an X. `Timeout(component)` puts a `Timer` beside a
+  component, runs it out and stamps "timeout". `Retry(packet, connector,
+  attempts=3, backoff=0.5, multiplier=2)` drops, waits with a visible
+  countdown that grows each time, and finally gets through. `CircuitBreaker`
+  sits on a wire; `set_state("closed" | "open" | "half_open")` moves its lever,
+  `TripBreaker` and `ResetBreaker` add a flash, and `Drop(..., at=breaker)`
+  is a request rejected there. `Timer` and `Countdown` are the clock on
+  their own.
+- **Concurrency** — `FanOut(packet, connectors)` sends a copy down every
+  wire at once (or staggered by `lag_ratio`); `FanIn(packet, connectors,
+  merged="200 OK")` brings the replies back and fades in the combined result.
+  `MessageQueue(capacity)` is a row of slots whose fill shows depth, turning
+  amber near capacity and red when full; `Enqueue(queue, packet)` and
+  `Dequeue(queue, to=worker)` move packets in and out and change the depth
+  as they land, so a `LaggedStart` of each is a queue under load. A full
+  queue turns arrivals away with an X.
 - **`Message` and `SequenceDiagram`** — plain records and the diagram that
   draws them: `message(src, dst, label, kind)` adds one row, `activate` draws
-  a bar. `message_animation(msg, system, sequence)` plays a message in either
-  or both views at once, so one list of messages drives the whole video.
+  a bar. Kinds are `sync`, `reply`, `async`, `lost` (stops short with an X)
+  and `timeout` (a self-message in the warning colour).
+  `message_animation(msg, system, sequence)` plays a message in either or
+  both views at once, so one list of messages drives the whole video: a
+  `lost` message is a `Drop` in the system view, a `timeout` a `Timeout`.
 - **`Caption`, `Callout`, `Spotlight` / `Unspotlight`** — narration at a
   screen edge, a note with a leader line, and dimming everything but one thing.
   In a 3D scene, add a caption with `caption.pin(scene)` so it stays put while
@@ -157,8 +190,8 @@ uv run manim -s -qm examples/request_flow.py SoftwareSmokeScene
 ```
 
 CI (`.github/workflows/ci.yml`) runs the tests on the oldest and newest
-supported Python, renders the smoke still, `PacketTest`, `DatabaseZoom` and
-`RequestFlow` to catch what the tests cannot, keeps those renders as workflow
+supported Python, renders the smoke still, `PacketTest`, `DatabaseZoom`,
+`RequestFlow` and the four failure-mode scenes to catch what the tests cannot, keeps those renders as workflow
 artifacts, and builds the sdist and wheel. The GIFs in this README come from
 `scripts/render_readme_media.sh`, which re-renders the examples and writes to
 `docs/media/`; run it after changing an example scene.

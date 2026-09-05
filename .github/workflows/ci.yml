@@ -38,13 +38,18 @@ jobs:
 
       # The unit tests never render. These scenes do: a still that touches
       # every 2D mobject (bundled SVG icons included), a clip of packets on
-      # wires, the 3D props under a moving camera, and the full example story.
+      # wires, the 3D props under a moving camera, the full example story,
+      # and the failure and concurrency vocabulary.
       - name: Smoke render
         run: |
           uv run manim -s -qm examples/request_flow.py SoftwareSmokeScene
           uv run manim -ql examples/request_flow.py PacketTest
           uv run manim -ql examples/request_flow.py DatabaseZoom
           uv run manim -ql examples/request_flow.py RequestFlow
+          uv run manim -ql examples/failure_modes.py RetryWithBackoff
+          uv run manim -ql examples/failure_modes.py TimeoutAndBreaker
+          uv run manim -ql examples/failure_modes.py FanOutFanIn
+          uv run manim -ql examples/failure_modes.py QueueUnderLoad
 
       - name: Keep the rendered frames for eyeballing
         if: always()
@@ -54,6 +59,7 @@ jobs:
           path: |
             tmp/media/images/request_flow/*.png
             tmp/media/videos/request_flow/480p15/*.mp4
+            tmp/media/videos/failure_modes/480p15/*.mp4
           if-no-files-found: ignore
 
   build:
