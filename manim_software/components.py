@@ -295,10 +295,10 @@ class Container(VGroup):
 
 class SystemDiagram(VGroup):
     """
-    A named collection of components and the connectors between them. Only a
-    registry: laying components out is still done with ordinary manim calls
-    (``arrange``, ``next_to``, ``to_edge``); ``resolve_labels`` then keeps the
-    wire labels off the things they label.
+    A named collection of components and the connectors between them. Lay
+    the components out by hand with ordinary manim calls (``arrange``,
+    ``next_to``, ``to_edge``) or let ``layout()`` do it; ``resolve_labels``
+    then keeps the wire labels off the things they label.
     """
     def __init__(self, style: DiagramStyle | None = None, **kwargs):
         super().__init__(**kwargs)
@@ -343,6 +343,60 @@ class SystemDiagram(VGroup):
 
     def get_connectors(self) -> VGroup:
         return VGroup(*self.connectors.values())
+
+    def layout(
+        self,
+        kind: str = "layered",
+        direction: Vector3D = RIGHT,
+        layer_gap: float = 1.5,
+        node_gap: float = 0.5,
+        layers: dict[str, int] | None = None,
+        fit_labels: bool = True,
+        resolve_labels: bool = True,
+        **kwargs
+    ) -> Self:
+        """
+        Place the components automatically, then refit containers, reroute
+        wires and (unless told not to) resolve labels. ``"layered"`` runs
+        the flow along ``direction`` with wires going forward, members of a
+        container kept together, and ``layers`` pinning components to a
+        layer (``{"cache": 2, "db": 2}``); with ``fit_labels`` the layer gap
+        grows until the widest wire label fits between layers. ``"force"``
+        is a spring layout for graphs without a flow. Extra keyword arguments
+        reach ``layout.layered_layout`` or ``layout.force_layout``.
+        """
+        from manim_software.layout import force_layout
+        from manim_software.layout import layered_layout
+        nodes = list(self.components)
+        edges = list(self.connectors)
+        sizes = {name: (comp.width, comp.height) for name, comp in self.components.items()}
+        if kind == "layered":
+            if fit_labels:
+                widest = max([c.label.width for c in self.connectors.values() if c.label is not None] + [0.0])
+                layer_gap = max(layer_gap, widest + 2 * SMALL_BUFF + 2 * self.style.edge_tip_length)
+            groups = {}
+            for index, container in enumerate(self.containers):
+                for name, comp in self.components.items():
+                    if comp in container.members.submobjects and name not in groups:
+                        groups[name] = index
+            group_gap = kwargs.pop("group_gap", 2 * max([c.buff for c in self.containers] + [0.0]))
+            positions = layered_layout(
+                nodes, edges, sizes, direction=direction, layer_gap=layer_gap, node_gap=node_gap,
+                groups=groups, group_gap=group_gap, layers=layers, **kwargs
+            )
+        elif kind == "force":
+            positions = force_layout(nodes, edges, sizes, **kwargs)
+        else:
+            raise ValueError("kind must be 'layered' or 'force'")
+        for name, point in positions.items():
+            self.components[name].move_to(point)
+        for container in self.containers:
+            container.refit()
+        for connector in self.connectors.values():
+            connector.reroute()
+        if resolve_labels:
+            self.resolve_labels()
+        return self
 
     def resolve_labels(self, margin: float = 0.05, obstacles: Iterable[Mobject] = (), **kwargs) -> Self:
         """

@@ -29,5 +29,7 @@ gif failure_modes QueueUnderLoad queue_under_load
 
 manim -s -qm examples/request_flow.py SoftwareSmokeScene
 cp "$(ls -t tmp/media/images/request_flow/SoftwareSmokeScene*.png | head -1)" "$out/smoke.png"
+manim -s -qm examples/request_flow.py AutoLayoutScene
+cp "$(ls -t tmp/media/images/request_flow/AutoLayoutScene*.png | head -1)" "$out/auto_layout.png"
 
 ls -la "$out"
