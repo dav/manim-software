@@ -7,6 +7,11 @@ scaled and animated piece by piece.
 name up in ``ICON_REGISTRY`` first, then falls back to an SVG file found in the
 package's ``assets`` directory or manim's configured ``assets_dir``, and
 finally to a labelled placeholder so a typo never kills a render.
+
+The package ``assets`` directory ships a few monochrome outlines that have no
+pictogram (``phone``, ``mail``, ``file``); they are recoloured with the style's
+``icon_color`` like the pictograms. SVGs from ``assets_dir`` keep their own
+colours.
 """
 from __future__ import annotations
 
@@ -47,6 +52,7 @@ if TYPE_CHECKING:
 
 
 SOFTWARE_ASSETS_DIR = Path(__file__).parent / "assets"
+"""SVGs that ship with the package; see ``assets/README.md``."""
 
 DEFAULT_ICON_HEIGHT = 0.6
 
@@ -227,6 +233,11 @@ def find_svg(name: str) -> Path | None:
     return None
 
 
+def _is_bundled_svg(path: Path) -> bool:
+    """Whether ``path`` is one of the SVGs that ship in the package assets directory."""
+    return path.resolve().is_relative_to(SOFTWARE_ASSETS_DIR.resolve())
+
+
 def _placeholder_icon(name: str, height: float, style: DiagramStyle) -> VGroup:
     box = RoundedRectangle(corner_radius=0.1, width=1.4, height=1.0)
     box.set_stroke(style.icon_color, 2.0).set_fill(opacity=0)
@@ -248,6 +259,9 @@ def Icon(
     treated as an SVG file looked up in the package assets directory, then
     manim's configured ``assets_dir`` (absolute paths also work). Unknown
     names give a labelled placeholder.
+
+    Bundled SVGs are monochrome outlines and take the style's ``icon_color``
+    unless ``color=`` is given; SVGs from elsewhere keep their own colours.
     """
     style = _resolve_style(style)
     cls = ICON_REGISTRY.get(name.lower())
@@ -257,4 +271,7 @@ def Icon(
     if path is None:
         logger.warning("No icon or SVG named '%s'; using a placeholder", name)
         return _placeholder_icon(name, height, style)
-    return SVGMobject(str(path), height=height, **kwargs)
+    svg = SVGMobject(str(path), height=height, **kwargs)
+    if _is_bundled_svg(path) and "color" not in kwargs:
+        svg.set_color(style.icon_color)
+    return svg
