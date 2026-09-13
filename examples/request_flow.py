@@ -66,6 +66,26 @@ def build_request_system(style: DiagramStyle | None = None) -> SystemDiagram:
     return system
 
 
+def build_request_system_auto(style: DiagramStyle | None = None) -> SystemDiagram:
+    """The same system, with no hand placement: components, containers, wires, then ``layout()``."""
+    system = SystemDiagram(style=style)
+    user = system.add_component("user", Component("User", icon="user", style=style))
+    browser = system.add_component("browser", Component("Browser", icon="browser", style=style))
+    gateway = system.add_component("gateway", Component("API Gateway", icon="lock", style=style))
+    service = system.add_component("service", Component("Order Service", icon="server", style=style))
+    cache = system.add_component("cache", Component("Cache", icon="cache", style=style))
+    db = system.add_component("db", Component("Database", icon="database", style=style))
+    system.add_container(Container(user, browser, title="Client", style=style))
+    system.add_container(Container(gateway, title="Edge", style=style))
+    system.add_container(Container(service, cache, db, title="Backend", style=style))
+    system.connect("user", "browser", label="click")
+    system.connect("browser", "gateway", label="HTTPS")
+    system.connect("gateway", "service", label="gRPC")
+    system.connect("service", "cache", route="orthogonal", label="get/set")
+    system.connect("service", "db", route="orthogonal", label="SQL")
+    return system.layout(layer_gap=1.4, node_gap=0.5)
+
+
 def build_sequence(**kwargs) -> SequenceDiagram:
     return SequenceDiagram(PARTICIPANTS, **kwargs)
 
@@ -258,6 +278,15 @@ class SoftwareSmokeScene(Scene):
         system.resolve_labels(obstacles=[packet])       # a parked packet is an obstacle too
         self.add(packet, pill)
         self.add(Caption("Smoke test", position=RIGHT, buff=MED_SMALL_BUFF, font_size=20))
+
+
+class AutoLayoutScene(Scene):
+    """A still of the request system placed by ``SystemDiagram.layout()`` instead of by hand."""
+    def construct(self):
+        system = build_request_system_auto()
+        system.scale_to_fit_width(config.frame_width - 1.0)
+        self.add(system)
+        self.add(Caption("Placed by layout(): layers along the flow, containers kept together", position=DOWN, font_size=24))
 
 
 class PacketTest(Scene):

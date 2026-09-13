@@ -46,6 +46,10 @@ from manim_software.connectors import Route
 from manim_software.connectors import Connector
 from manim_software.connectors import length_alpha_to_curve_alpha
 
+from manim_software.layout import assign_layers
+from manim_software.layout import order_layers
+from manim_software.layout import layered_layout
+from manim_software.layout import force_layout
 from manim_software.layout import label_candidates
 from manim_software.layout import place_labels
 
@@ -102,7 +106,7 @@ __all__ = [
     "find_svg", "get_assets_dir",
     "Component", "Container", "SystemDiagram", "bounding_box_point",
     "Route", "Connector", "length_alpha_to_curve_alpha",
-    "label_candidates", "place_labels",
+    "assign_layers", "order_layers", "layered_layout", "force_layout", "label_candidates", "place_labels",
     "Packet", "Send", "Reply", "Pulse", "SendAlong", "FadeInAfter", "reply_hops",
     "Timer", "Countdown", "Timeout", "Drop", "Retry", "CircuitBreaker", "TripBreaker", "ResetBreaker",
     "FanOut", "FanIn", "MessageQueue", "Enqueue", "Dequeue",

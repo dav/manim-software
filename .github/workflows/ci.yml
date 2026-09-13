@@ -43,6 +43,7 @@ jobs:
       - name: Smoke render
         run: |
           uv run manim -s -qm examples/request_flow.py SoftwareSmokeScene
+          uv run manim -s -qm examples/request_flow.py AutoLayoutScene
           uv run manim -ql examples/request_flow.py PacketTest
           uv run manim -ql examples/request_flow.py DatabaseZoom
           uv run manim -ql examples/request_flow.py RequestFlow

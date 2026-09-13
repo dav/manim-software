@@ -93,6 +93,11 @@ The repo's `manim.cfg` sends media to `tmp/media`, which is git-ignored.
 | --- | --- |
 | ![Packets travelling out and back along three wires](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/packet_test.gif) | ![One still touching every 2D mobject in the layer](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/smoke.png) |
 
+`AutoLayoutScene` is the same system with no hand placement at all, just
+components, containers, wires and `system.layout()`:
+
+![The request system placed automatically in layers along the flow](https://raw.githubusercontent.com/dav/manim-software/main/docs/media/auto_layout.png)
+
 `examples/failure_modes.py` has one scene for each thing that goes wrong, or
 happens all at once:
 
@@ -118,7 +123,16 @@ happens all at once:
   after moving them.
 - **`SystemDiagram`** — a registry: `add_component(name, ...)`,
   `connect(src, dst, ...)`, `get_connector(src, dst)` (which also says whether
-  it runs backwards). Once the components are placed, `resolve_labels()`
+  it runs backwards). Place components by hand, or call `layout()`: layers
+  along the flow (`direction=RIGHT`), wires running forward, members of a
+  container kept together, the layer gap widened to fit the widest wire
+  label, and `layers={"cache": 3}` to pin a component to a layer;
+  `kind="force"` is a spring layout for graphs without a flow. It ends by
+  refitting containers, rerouting wires and resolving labels. The
+  algorithms are plain functions in `manim_software.layout`
+  (`layered_layout`, `assign_layers`, `order_layers`, `force_layout`) over
+  names and sizes, using the networkx that ships with manim. Once the
+  components are placed, `resolve_labels()`
   moves every wire label to a spot clear of components, container titles and
   other labels, preferring one that crosses no other wire or container frame;
   pass `obstacles=[packet]` for anything parked on the diagram. It is
@@ -207,8 +221,9 @@ uv run manim -s -qm examples/request_flow.py SoftwareSmokeScene
 ```
 
 CI (`.github/workflows/ci.yml`) runs the tests on the oldest and newest
-supported Python, renders the smoke still, `PacketTest`, `DatabaseZoom`,
-`RequestFlow` and the four failure-mode scenes to catch what the tests cannot, keeps those renders as workflow
+supported Python, renders the smoke and auto-layout stills, `PacketTest`,
+`DatabaseZoom`, `RequestFlow` and the four failure-mode scenes to catch what
+the tests cannot, keeps those renders as workflow
 artifacts, and builds the sdist and wheel. The GIFs in this README come from
 `scripts/render_readme_media.sh`, which re-renders the examples and writes to
 `docs/media/`; run it after changing an example scene.
