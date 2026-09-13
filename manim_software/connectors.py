@@ -82,7 +82,12 @@ def _port(mob: Mobject | Point3D, direction: Vector3D | None, offset: float = 0.
         return np.array(mob, dtype=float)
     if direction is None:
         return mob.get_center()
-    if hasattr(mob, "get_port"):
+    # Looked up on the type, not the instance: manim's Mobject.__getattr__
+    # fabricates an attribute for *any* name, so hasattr(mob, "get_port") is
+    # True for every mobject and this branch would be taken for all of them —
+    # then fail with "getter() takes 1 positional argument but 3 were given"
+    # the moment a Connector is given anything but a Component.
+    if callable(getattr(type(mob), "get_port", None)):
         return mob.get_port(direction, offset)
     return bounding_box_point(mob, np.array(direction, dtype=float))
 
