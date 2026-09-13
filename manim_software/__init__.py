@@ -3,8 +3,9 @@ manim_software: mobjects and animations for explaining how software works,
 as a plugin for Manim Community.
 
 Diagrams of systems (components, containers, connectors), the messages that
-travel between them (packets), sequence diagrams of the same interactions,
-annotations, and a few 3D set pieces::
+travel between them (packets), what goes wrong with them (drops, timeouts,
+retries, circuit breakers), many at once (fan-out, fan-in, queues), sequence
+diagrams of the same interactions, annotations, and a few 3D set pieces::
 
     from manim import *
     from manim_software import *
@@ -53,6 +54,21 @@ from manim_software.packets import SendAlong
 from manim_software.packets import FadeInAfter
 from manim_software.packets import reply_hops
 
+from manim_software.failures import Timer
+from manim_software.failures import Countdown
+from manim_software.failures import Timeout
+from manim_software.failures import Drop
+from manim_software.failures import Retry
+from manim_software.failures import CircuitBreaker
+from manim_software.failures import TripBreaker
+from manim_software.failures import ResetBreaker
+
+from manim_software.concurrency import FanOut
+from manim_software.concurrency import FanIn
+from manim_software.concurrency import MessageQueue
+from manim_software.concurrency import Enqueue
+from manim_software.concurrency import Dequeue
+
 from manim_software.sequence import Message
 from manim_software.sequence import SequenceDiagram
 from manim_software.sequence import message_animation
@@ -84,6 +100,8 @@ __all__ = [
     "Component", "Container", "SystemDiagram", "bounding_box_point",
     "Route", "Connector", "length_alpha_to_curve_alpha",
     "Packet", "Send", "Reply", "Pulse", "SendAlong", "FadeInAfter", "reply_hops",
+    "Timer", "Countdown", "Timeout", "Drop", "Retry", "CircuitBreaker", "TripBreaker", "ResetBreaker",
+    "FanOut", "FanIn", "MessageQueue", "Enqueue", "Dequeue",
     "Message", "SequenceDiagram", "message_animation",
     "Caption", "Spotlight", "Unspotlight", "Callout",
     "TitleCard", "open_on",

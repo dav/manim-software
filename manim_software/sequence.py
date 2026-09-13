@@ -25,6 +25,9 @@ from manim import VGroup
 from manim_software.components import Component
 from manim_software.components import SystemDiagram
 from manim_software.connectors import Connector
+from manim_software.failures import Drop
+from manim_software.failures import Timeout
+from manim_software.failures import _cross
 from manim_software.packets import FadeInAfter
 from manim_software.packets import Packet
 from manim_software.packets import Send
@@ -41,7 +44,8 @@ if TYPE_CHECKING:
     from manim_software.style import DiagramStyle
 
 
-MESSAGE_KINDS = ("sync", "reply", "async")
+MESSAGE_KINDS = ("sync", "reply", "async", "lost", "timeout")
+LOST_AT = 0.7   # how far a lost message gets before the X
 
 
 def _label_text(component: Component) -> str:
@@ -55,7 +59,7 @@ class Message:
     src: str
     dst: str
     label: str = ""
-    kind: str = "sync"      # sync | reply | async
+    kind: str = "sync"      # sync | reply | async | lost | timeout
     packet_label: str | None = None
 
     def __post_init__(self):
@@ -185,6 +189,10 @@ class SequenceDiagram(VGroup):
             buff=0.0,
             style=self.style,
         )
+        if kind == "timeout":
+            x1 = x0
+            common["color"] = self.style.warning_color
+            label = label or "timeout"
         if np.isclose(x0, x1):
             arrow = Connector(
                 [x0, y + 0.2 * self.row_height, 0], [x0, y - 0.3 * self.row_height, 0],
@@ -192,6 +200,13 @@ class SequenceDiagram(VGroup):
             )
             if label:
                 arrow.add_label(label, proportion=0.5, direction=RIGHT, buff=0.08)
+        elif kind == "lost":
+            x_end = x0 + LOST_AT * (x1 - x0)
+            arrow = Connector([x0, y, 0], [x_end, y, 0], route="straight", tip=None, **common)
+            arrow.mark = _cross(arrow.get_end(), self.style.error_color, size=0.08, stroke_width=3.0)
+            arrow.add(arrow.mark)
+            if label:
+                arrow.add_label(label, proportion=0.5, direction=UP, buff=0.05)
         else:
             arrow = Connector([x0, y, 0], [x1, y, 0], route="straight", **common)
             if label:
@@ -229,21 +244,31 @@ def message_animation(
     """
     One message, played in whichever views are given: a packet along the
     system's connector, and/or a new arrow growing in the sequence diagram.
+    A ``lost`` message is a ``Drop`` in the system view; a ``timeout`` is a
+    ``Timeout`` beside its source component.
     """
     if system is None and sequence is None:
         raise ValueError("message_animation needs a system, a sequence diagram, or both")
     anims = []
     if system is not None:
-        connector, reverse = system.get_connector(msg.src, msg.dst)
-        if packet is None:
-            style = system.style
-            color = style.reply_color if msg.kind == "reply" else style.packet_color
-            packet = Packet(_pick(msg.packet_label, msg.label), color=color, style=style)
-        send_kwargs.setdefault("fade_out", True)
-        anims.append(Send(packet, connector, reverse=reverse, run_time=run_time, **send_kwargs))
+        style = system.style
+        if msg.kind == "timeout":
+            anims.append(Timeout(system[msg.src], label=msg.label or "timeout", style=style, run_time=run_time))
+        else:
+            connector, reverse = system.get_connector(msg.src, msg.dst)
+            if packet is None:
+                color = style.reply_color if msg.kind == "reply" else style.packet_color
+                packet = Packet(_pick(msg.packet_label, msg.label), color=color, style=style)
+            if msg.kind == "lost":
+                anims.append(Drop(packet, connector, at=LOST_AT, reverse=reverse, run_time=run_time, **send_kwargs))
+            else:
+                send_kwargs.setdefault("fade_out", True)
+                anims.append(Send(packet, connector, reverse=reverse, run_time=run_time, **send_kwargs))
     if sequence is not None:
         arrow = sequence.message_from(msg)
         anims.append(GrowFromPoint(arrow.route, arrow.route.get_start(), run_time=run_time))
         if arrow.label is not None:
             anims.append(FadeInAfter(arrow.label, delay=0.5, run_time=run_time))
+        if getattr(arrow, "mark", None) is not None:
+            anims.append(FadeInAfter(arrow.mark, delay=0.7, run_time=run_time))
     return AnimationGroup(*anims, run_time=run_time)

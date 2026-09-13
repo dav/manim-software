@@ -25,6 +25,7 @@ from manim import GREY_C
 from manim import GREY_D
 from manim import GREY_E
 from manim import MED_SMALL_BUFF
+from manim import ORANGE
 from manim import RED
 from manim import TEAL
 from manim import WHITE
@@ -62,6 +63,7 @@ class DiagramStyle:
     active_color: ManimColor = YELLOW
     error_color: ManimColor = RED
     done_color: ManimColor = GREEN
+    warning_color: ManimColor = ORANGE     # timers, backoff, a half-open breaker, a queue nearly full
 
     # Containers (dashed group boxes)
     container_stroke: ManimColor = GREY_C
