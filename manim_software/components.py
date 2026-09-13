@@ -37,6 +37,7 @@ from manim_software.style import _pick
 from manim_software.style import _resolve_style
 
 if TYPE_CHECKING:
+    from typing import Iterable
     from typing import Self
 
     from manim.typing import ManimColor
@@ -296,7 +297,8 @@ class SystemDiagram(VGroup):
     """
     A named collection of components and the connectors between them. Only a
     registry: laying components out is still done with ordinary manim calls
-    (``arrange``, ``next_to``, ``to_edge``).
+    (``arrange``, ``next_to``, ``to_edge``); ``resolve_labels`` then keeps the
+    wire labels off the things they label.
     """
     def __init__(self, style: DiagramStyle | None = None, **kwargs):
         super().__init__(**kwargs)
@@ -341,3 +343,27 @@ class SystemDiagram(VGroup):
 
     def get_connectors(self) -> VGroup:
         return VGroup(*self.connectors.values())
+
+    def resolve_labels(self, margin: float = 0.05, obstacles: Iterable[Mobject] = (), **kwargs) -> Self:
+        """
+        Move wire labels off components, container titles and each other,
+        and where possible off other wires and container frames. Call after
+        the components are in their final places (and again after moving
+        them, or after parking a packet or a callout on the diagram, passed
+        as extra ``obstacles``); see ``layout.place_labels`` for the search
+        and its options.
+        """
+        from manim_software.layout import place_labels
+        obstacles = (
+            list(self.components.values())
+            + [c.title for c in self.containers if len(c.title)]
+            + list(obstacles)
+        )
+        place_labels(
+            self.connectors.values(),
+            obstacles=obstacles,
+            frames=[c.frame for c in self.containers],
+            margin=margin,
+            **kwargs
+        )
+        return self

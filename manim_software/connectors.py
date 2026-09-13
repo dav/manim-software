@@ -480,6 +480,7 @@ class Connector(VGroup):
         else:
             text_mob = _make_text(text, font_size=_pick(font_size, self.style.small_font_size), style=self.style)
         if direction is None:
+            text_mob.set_stroke(width=0, background=True)
             label = VGroup(BackgroundRectangle(text_mob, buff=0.6 * SMALL_BUFF), text_mob)
         else:
             _backstroke(text_mob)
@@ -495,6 +496,21 @@ class Connector(VGroup):
         label.set_z_index(Z_EDGE_LABEL)
         self.add(label)
         return label
+
+    def move_label(
+        self,
+        proportion: float = 0.5,
+        direction: Vector3D | None = None,
+        buff: float = SMALL_BUFF,
+    ) -> VGroup:
+        """
+        Put the existing label somewhere else on or beside the wire, with the
+        same meaning of ``direction`` as ``add_label``. ``place_labels`` in
+        ``layout`` calls this while searching for a clear spot.
+        """
+        if self.label is None:
+            raise ValueError("This connector has no label to move")
+        return self.add_label(self.label_text, proportion=proportion, direction=direction, buff=buff)
 
     def _place_label(self) -> None:
         point = self.get_point(self.label_proportion)

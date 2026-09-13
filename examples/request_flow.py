@@ -62,6 +62,7 @@ def build_request_system(style: DiagramStyle | None = None) -> SystemDiagram:
     system.connect("gateway", "service", label="gRPC")
     system.connect("service", "cache", route="orthogonal", label="get/set")
     system.connect("service", "db", route="orthogonal", label="SQL")
+    system.resolve_labels()
     return system
 
 
@@ -249,9 +250,12 @@ class SoftwareSmokeScene(Scene):
             Connector(a, b, route="arc", path_arc=-1.2, tip="both"),
             Connector(b, b, route="loop", start_dir=UP, label="self"),
         )
-        self.add(a, b, variants)
-        packet = Packet("GET /orders").move_to(system.connectors[("browser", "gateway")].get_point(0.5))
         pill = Packet("200 OK", shape="pill", color=TEAL).move_to(variants[2].get_point(0.5))
+        place_labels(variants, obstacles=[a, b, pill])   # standalone wires get the same pass as a SystemDiagram
+        self.add(a, b, variants)
+        packet = Packet("GET /orders").scale(0.62)
+        packet.move_to(system.connectors[("gateway", "service")].get_point(0.5))
+        system.resolve_labels(obstacles=[packet])       # a parked packet is an obstacle too
         self.add(packet, pill)
         self.add(Caption("Smoke test", position=RIGHT, buff=MED_SMALL_BUFF, font_size=20))
 

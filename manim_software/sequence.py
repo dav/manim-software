@@ -32,6 +32,7 @@ from manim_software.packets import FadeInAfter
 from manim_software.packets import Packet
 from manim_software.packets import Send
 from manim_software.style import Z_NODE
+from manim_software.style import _make_text
 from manim_software.style import _pick
 from manim_software.style import _resolve_style
 
@@ -74,39 +75,60 @@ class SequenceDiagram(VGroup):
     next free row and returns it as a ``Connector``, so the usual creation
     animations and ``Send`` apply; ``activate`` draws an activation bar.
     """
+    HEADER_PADDING = 0.12
+
     def __init__(
         self,
         participants: Sequence[str | tuple[str, str] | Component],
-        spacing: float = 2.5,
+        spacing: float | None = None,
         n_rows: int = 8,
         row_height: float = 0.6,
         header_height: float = 0.8,
         header_width: float = 1.4,
+        header_gap: float = 0.25,
         style: DiagramStyle | None = None,
         **kwargs
     ):
         super().__init__(**kwargs)
         style = _resolve_style(style)
         self.style = style
-        self.spacing = spacing
         self.row_height = row_height
         self.n_rows = n_rows
         self.row = 0
 
+        # Participants are spaced so the widest name fits with header_gap to
+        # spare; a given spacing wins, and names shrink (all by the same
+        # factor, so they still read as one row) to fit inside it.
         self.keys: list[str] = []
-        self.headers = VGroup()
-        for i, participant in enumerate(participants):
+        labels = []
+        for participant in participants:
             key, display = self._key_and_display(participant)
+            self.keys.append(key)
+            labels.append(_make_text(display, font_size=style.small_font_size, style=style))
+        padding = self.HEADER_PADDING
+        if spacing is None:
+            widest = max([header_width] + [label.width + 2 * padding for label in labels])
+            spacing = widest + header_gap
+        else:
+            max_width = max(spacing - header_gap, 0.3)
+            header_width = min(header_width, max_width)
+            widest = max([0.0] + [label.width for label in labels])
+            room = max(0.05, max_width - 2 * padding)
+            if widest > room:
+                for label in labels:
+                    label.scale(room / widest)
+        self.spacing = spacing
+
+        self.headers = VGroup()
+        for i, label in enumerate(labels):
             header = Component(
-                display,
-                font_size=style.small_font_size,
+                label,
                 min_width=header_width,
                 min_height=header_height,
-                padding=0.12,
+                padding=padding,
                 style=style,
             )
             header.move_to(i * spacing * RIGHT)
-            self.keys.append(key)
             self.headers.add(header)
 
         self.lifelines = VGroup(*(self._build_lifeline(i) for i in range(len(self.keys))))

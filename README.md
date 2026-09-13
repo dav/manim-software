@@ -118,7 +118,12 @@ happens all at once:
   after moving them.
 - **`SystemDiagram`** — a registry: `add_component(name, ...)`,
   `connect(src, dst, ...)`, `get_connector(src, dst)` (which also says whether
-  it runs backwards).
+  it runs backwards). Once the components are placed, `resolve_labels()`
+  moves every wire label to a spot clear of components, container titles and
+  other labels, preferring one that crosses no other wire or container frame;
+  pass `obstacles=[packet]` for anything parked on the diagram. It is
+  `place_labels(connectors, obstacles, frames)` underneath, which works on
+  loose connectors too.
 - **Icons** — `BrowserIcon`, `ServerIcon`, `DatabaseIcon`, `CacheIcon`,
   `QueueIcon`, `UserIcon`, `CloudIcon`, `LockIcon`, all drawn from primitives.
   `Icon(name)` looks a name up in `ICON_REGISTRY`, then as an SVG in the
@@ -130,9 +135,11 @@ happens all at once:
 - **`Connector`** — a wire between two mobjects' ports:
   `route="straight" | "arc" | "orthogonal" | "loop"`, tips at either end
   (`tip_shape` takes any manim `ArrowTip`), `dashed`, `offset` for parallel
-  lanes, and a `label`. `attach()` makes it follow moving endpoints. Its
-  `route` is a `Route`, the path packets travel.
-- **`Packet`** — a dot or a labelled pill. `Send(packet, connector)` moves it
+  lanes, and a `label` (on the wire, or beside it with `label_kwargs=dict(direction=UP)`;
+  `move_label(proportion, direction)` re-places it). `attach()` makes it
+  follow moving endpoints. Its `route` is a `Route`, the path packets travel.
+- **`Packet`** — a dot with a label beside it (`label_direction`, `UP` by
+  default) or a labelled pill. `Send(packet, connector)` moves it
   with a trailing light and an arrival flash; `Reply` goes the other way;
   `SendAlong` chains hops and pulses each component on arrival; `reply_hops`
   reverses a list of connectors for the response.
@@ -155,7 +162,8 @@ happens all at once:
   queue turns arrivals away with an X.
 - **`Message` and `SequenceDiagram`** — plain records and the diagram that
   draws them: `message(src, dst, label, kind)` adds one row, `activate` draws
-  a bar. Kinds are `sync`, `reply`, `async`, `lost` (stops short with an X)
+  a bar. Participants are spaced to fit the widest name; give `spacing` to
+  fix it and names shrink to fit. Kinds are `sync`, `reply`, `async`, `lost` (stops short with an X)
   and `timeout` (a self-message in the warning colour).
   `message_animation(msg, system, sequence)` plays a message in either or
   both views at once, so one list of messages drives the whole video: a
