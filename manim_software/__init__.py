@@ -85,6 +85,9 @@ from manim_software.annotate import Spotlight
 from manim_software.annotate import Unspotlight
 from manim_software.annotate import Callout
 
+from manim_software.titles import TitleCard
+from manim_software.titles import open_on
+
 from manim_software.three_d import Database3D
 from manim_software.three_d import Server3D
 from manim_software.three_d import DiagramCamera
@@ -109,5 +112,6 @@ __all__ = [
     "FanOut", "FanIn", "MessageQueue", "Enqueue", "Dequeue",
     "Message", "SequenceDiagram", "message_animation",
     "Caption", "Spotlight", "Unspotlight", "Callout",
+    "TitleCard", "open_on",
     "Database3D", "Server3D", "DiagramCamera", "SoftwareThreeDScene", "zoom_to", "orbit", "reset_camera",
 ]

@@ -186,6 +186,10 @@ happens all at once:
   screen edge, a note with a leader line, and dimming everything but one thing.
   In a 3D scene, add a caption with `caption.pin(scene)` so it stays put while
   the camera moves.
+- **`TitleCard` and `open_on`** — the frame a video opens on. `open_on(scene,
+  card)` *adds* the card and only then animates, so the first frame in the file
+  is the title rather than black; the subtitle and footer fade up after it.
+  Each line takes a string or a prebuilt mobject.
 - **`Database3D`, `Server3D`, `SoftwareThreeDScene`, `zoom_to`, `orbit`,
   `reset_camera`** — props that stand up out of the diagram's plane, and the
   camera moves that look at them. Manim's Cairo renderer draws flat mobjects
@@ -202,6 +206,11 @@ happens all at once:
   knows) for a fixed look across machines.
 - Anything you keep on a mobject must survive `copy.deepcopy`: manim copies
   mobjects for every animation.
+- A scene that opens with `self.play(FadeIn(...))` has a black first frame,
+  because a fade starts at zero opacity. That is invisible while the video
+  plays and very visible in a thumbnail, a paused player, or an unplayed
+  `<video>`. `open_on` is the fix; anything else that must be on frame zero
+  has to be `add`ed before the first `play`.
 
 ## Development
 
